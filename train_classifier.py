@@ -14,7 +14,7 @@ class  options:
         self.batch_size = 128 # size of batch train
         self.epoch = 10 # number of training epochs
         self.save_path = "MNIST_resnet18" # save path to model
-        self.save_frequency = 2 # save every 2 epochs
+        self.save_frequency = 1 # save every 2 epochs
         # self.visdom_port = 8097
         # self.visdom_hostname= "http://localhost"
 
