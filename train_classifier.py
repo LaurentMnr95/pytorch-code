@@ -5,6 +5,8 @@ import torchvision.transforms as transforms
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+from visdom import Visdom
+
 class  options:
     def __init__(self):
         self.input_nc = 1 # num of input channel
@@ -13,7 +15,10 @@ class  options:
         self.epoch = 10 # number of training epochs
         self.save_path = "MNIST_resnet18" # save path to model
         self.save_frequency = 2 # save every 2 epochs
-# define generators
+        # self.visdom_port = 8097
+        # self.visdom_hostname= "http://localhost"
+
+# define options
 opt  = options()
 epoch =1
 # defining device
@@ -55,6 +60,8 @@ transform = transforms.Compose(
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(Classifier.parameters(), lr=0.001, momentum=0.9)
 
+# initialize Visdom
+# viz = Visdom(port=opt.visdom_port, server=opt.visdom_hostname)
 
 for epoch in range(opt.epoch):  # loop over the dataset multiple times
     current_num_input = 0
@@ -89,13 +96,12 @@ for epoch in range(opt.epoch):  # loop over the dataset multiple times
                     ", Running accuracy:",running_acc/20)
             running_loss = 0.0
             running_acc = 0
-    if epoch % 2 == 1:
+    if (epoch +1) % opt.save_frequency == 0:
         path_to_save = os.path.join(opt.save_path,"epoch"+str(epoch))
 
-        if os.path.exists(path_to_save):
-            os.remove(path_to_save)
-            os.makedirs(path_to_save)
-        else:
-            os.makedirs(path_to_save)
+        # if os.path.exists(path_to_save):
+        #     os.rmdir(path_to_save)
+        #     os.makedirs(path_to_save)
+        # else:
+        #     os.makedirs(path_to_save)
         torch.save(Classifier.state_dict(),path_to_save)
-os.exists(path_to_save)
