@@ -36,7 +36,7 @@ def get_args():
                         help='mini-batch size (default: 256), this is the total '
                              'batch size of all GPUs on the current node when '
                              'using Data Parallel or Distributed Data Parallel')
-    # optimizer parameters
+    # optimizer parameters for SGD
     parser.add_argument('--lr', '--learning-rate', default=0.1, type=float,
                         metavar='LR', help='initial learning rate', dest='lr')
     parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
@@ -44,6 +44,12 @@ def get_args():
     parser.add_argument('--wd', '--weight-decay', default=1e-4, type=float,
                         metavar='W', help='weight decay (default: 1e-4)',
                         dest='weight_decay')
+
+    #lr parameters
+    parser.add_argument('--lr_policy', default='step', type=str,
+                        metavar='L', help='lr_policy')
+    parser.add_argument('--stepsize_lr', default=30, type=int, metavar='N',
+                        help='step size for step decayed lr policy')
 
 
     # parser.add_argument('-p', '--print-freq', default=10, type=int,
