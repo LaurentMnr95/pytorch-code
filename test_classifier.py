@@ -6,14 +6,21 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 from visdom import Visdom
+from attacks.FGSM import *
+
 
 class  options:
     def __init__(self):
-        self.input_nc = 1 # num of input channel
+        self.dataset = "CIFAR10"
+        if self.dataset == "MNIST":
+            self.input_nc = 1 # num of input channels
+        else:
+            self.input_nc = 3 # num of input channels
+
         self.ngpu = 1 # num of gpus to train on
-        self.batch_size = 128 # size of batch train
-        self.epoch = 10 # number of training epochs
-        self.load_path = "MNIST_resnet18/epoch10" # save path to model
+        self.batch_size = 64 # size of batch test
+        self.epoch = 1 # number of training epochs
+        self.load_path = "model/epoch50" # save path to model
         self.save_frequency = 1 # save every 2 epochs
         # self.visdom_port = 8097
         # self.visdom_hostname= "http://localhost"
@@ -35,28 +42,32 @@ else:
 
 
 # Load inputs
-test_loader = torch.utils.data.DataLoader(
-    torchvision.datasets.MNIST('./data', train=False, download=True, transform=transforms.Compose([
-            transforms.ToTensor(),
-            ])),
-        batch_size=opt.batch_size, shuffle=True)
+transform = transforms.ToTensor()
+if opt.dataset == "CIFAR10":
+    test_loader = torch.utils.data.DataLoader(
+        torchvision.datasets.CIFAR10('./data', train=False, download=True, transform=transform),
+            batch_size=opt.batch_size, shuffle=False)
+    print("Loaded CIFAR 10 dataset")
+elif opt.dataset == "MNIST":
+    test_loader = torch.utils.data.DataLoader(
+        torchvision.datasets.MNIST('./data', train=False, download=True, transform=transform),
+            batch_size=opt.batch_size, shuffle=False)
+    print("Loaded MNIST dataset")
 
 num_images = len(test_loader.dataset)
 # Classifier  definition
-Classifier = resnet18(opt.input_nc)
-Classifier.load_state_dict(torch.load(opt.load_path))
+Classifier = resnet34(opt.input_nc)
+Classifier.load_state_dict(torch.load(opt.load_path)['state_dict'])
 Classifier.to(device)
-
-
-# Transform input to -1 1
-transform = transforms.Compose(
-    [transforms.ToTensor(),
-     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+print("Classifier intialized")
+print(Classifier)
+Classifier.eval()
 
 
 
-
+# Testing
 running_acc = 0
+running_acc_adv = 0
 for i, data in enumerate(test_loader, 0):
 
     # get the inputs
@@ -68,8 +79,12 @@ for i, data in enumerate(test_loader, 0):
     outputs = Classifier(inputs)
 
     _, predicted = torch.max(outputs.data, 1)
+    _, predicted_adv, _ = FGSM(Classifier, inputs ,labels, eps=0.1, x_val_min=0, x_val_max=1)
+    _, predicted_adv=torch.max( predicted_adv.data,1)
 
     with torch.no_grad():
-        running_acc += (predicted==labels).sum().item()
+        running_acc += (predicted==labels).double().sum().item()
+        running_acc_adv +=(predicted_adv==labels).double().sum().item()
 
-print("Accuracy on test data:",running_acc/num_images)
+print("Accuracy on test data for natural images:",running_acc/num_images)
+print("Accuracy on test data for adversarial images:",running_acc_adv/num_images)
