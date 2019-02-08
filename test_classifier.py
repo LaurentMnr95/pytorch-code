@@ -7,21 +7,10 @@ import numpy as np
 import os
 from visdom import Visdom
 from attacks.FGSM import *
+from attacks.DFOattacks import *
 from options_classifier import *
 from utils import *
 
-class  options:
-    def __init__(self):
-        self.dataset = "CIFAR10"
-        if self.dataset == "MNIST":
-            self.input_nc = 1 # num of input channels
-        else:
-            self.input_nc = 3 # num of input channels
-
-        self.ngpu = 1 # num of gpus to train on
-        self.batch_size = 64 # size of batch test
-        self.epoch = 1 # number of training epochs
-        self.load_path = "model/epoch50" # save path to model
 
 
 # define options
@@ -52,6 +41,8 @@ Classifier.eval()
 running_acc = 0
 running_acc_adv = 0
 for i, data in enumerate(test_loader, 0):
+    if i>100:
+        break
 
     # get the inputs
     inputs, labels = data
@@ -62,9 +53,12 @@ for i, data in enumerate(test_loader, 0):
     outputs = Classifier(inputs)
 
     _, predicted = torch.max(outputs.data, 1)
-    _, predicted_adv, _ = FGSM(Classifier, inputs ,labels, eps=0.03, x_val_min=0, x_val_max=1)
-    _, predicted_adv=torch.max( predicted_adv.data,1)
-
+    _, outputs_adv = DFOattack(Classifier, inputs ,labels, eps=0.1, x_val_min=0, x_val_max=1)
+    _, predicted_adv=torch.max( outputs_adv.data,1)
+    print()
+    print("predicted label",outputs_adv.view(-1)[labels])
+    print("predicted adv label",outputs.view(-1)[labels])
+    print("true label",labels)
     with torch.no_grad():
         running_acc += (predicted==labels).double().sum().item()
         running_acc_adv +=(predicted_adv==labels).double().sum().item()
