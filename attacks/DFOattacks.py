@@ -25,7 +25,7 @@ def DFOattack(net, x,y, criterion=F.cross_entropy, targeted=False, eps=0.1, x_va
 
     def loss(individual):
         netx_adv = net(convert_individual_to_image(individual))
-        return float(criterion(netx_adv,y))
+        return float(-criterion(netx_adv,y))
 
     optimizer = optimizerlib.registry[optimizer](dimension=32*32*3,budget=1000, num_workers=1)
     x_adv = convert_individual_to_image(optimizer.optimize(loss))

@@ -55,8 +55,8 @@ for i, data in enumerate(test_loader, 0):
     _, outputs_adv = DFOattack(Classifier, inputs ,labels, eps=0.1, x_val_min=0, x_val_max=1)
     _, predicted_adv=torch.max( outputs_adv.data,1)
     print()
-    print("predicted label",outputs_adv.view(-1)[labels])
-    print("predicted adv label",outputs.view(-1)[labels])
+    print("predicted adv label",outputs_adv.view(-1)[labels])
+    print("predicted label",outputs.view(-1)[labels])
     print("true label",labels)
     with torch.no_grad():
         running_acc += (predicted==labels).double().sum().item()
