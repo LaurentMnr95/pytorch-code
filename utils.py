@@ -43,11 +43,11 @@ def load_data(opt,train_mode=True):
     if opt.dataset == "CIFAR10":
         loader = torch.utils.data.DataLoader(
             torchvision.datasets.CIFAR10('./data', train=train_mode, download=True, transform=transform),
-                batch_size=opt.batch_size, shuffle=True)
+                batch_size=opt.batch_size, shuffle=train_mode)
         print("Loaded CIFAR 10 dataset")
     elif opt.dataset == "MNIST":
         loader = torch.utils.data.DataLoader(
             torchvision.datasets.MNIST('./data', train=train_mode, download=True, transform=transform),
-                batch_size=opt.batch_size, shuffle=True)
+                batch_size=opt.batch_size, shuffle=train_mode)
         print("Loaded MNIST dataset")
     return loader
