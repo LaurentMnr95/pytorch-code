@@ -38,16 +38,16 @@ def get_scheduler(optimizer, opt):
     return scheduler
 
 
-def load_data(opt):
+def load_data(opt,train_mode=True):
     transform = transforms.ToTensor()
     if opt.dataset == "CIFAR10":
-        train_loader = torch.utils.data.DataLoader(
-            torchvision.datasets.CIFAR10('./data', train=True, download=True, transform=transform),
+        loader = torch.utils.data.DataLoader(
+            torchvision.datasets.CIFAR10('./data', train=train_mode, download=True, transform=transform),
                 batch_size=opt.batch_size, shuffle=True)
         print("Loaded CIFAR 10 dataset")
     elif opt.dataset == "MNIST":
-        train_loader = torch.utils.data.DataLoader(
-            torchvision.datasets.MNIST('./data', train=True, download=True, transform=transform),
+        loader = torch.utils.data.DataLoader(
+            torchvision.datasets.MNIST('./data', train=train_mode, download=True, transform=transform),
                 batch_size=opt.batch_size, shuffle=True)
         print("Loaded MNIST dataset")
-    return train_loader
+    return loader

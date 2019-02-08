@@ -1,17 +1,4 @@
 import argparse
-class  options:
-    def __init__(self):
-        self.dataset = "CIFAR10"
-        if self.dataset == "MNIST":
-            self.input_nc = 1 # num of input channel
-        else:
-            self.input_nc = 3 # num of input channel
-
-        self.ngpu = 1 # num of gpus to train on
-        self.batch_size = 128 # size of batch train
-        self.epoch = 20 # number of training epochs
-        self.save_path = "CIFAR_resnet18" # save path to model
-        self.save_frequency = 1 # save every 2 epochs
 
 
 def get_args():
@@ -81,6 +68,37 @@ def get_args():
     #                          'N processes per node, which has N GPUs. This is the '
     #                          'fastest way to use PyTorch for either single node or '
     #                          'multi node data parallel training')
+
+    args = parser.parse_args()
+    return args
+
+def get_args_test():
+    parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
+    parser.add_argument('--dataset', default='CIFAR10', type=str,
+                        help='Dataset to train on')
+    parser.add_argument('--input_nc', default=3, type=int, metavar='N',
+                        help='number of input channels')
+    parser.add_argument('-b', '--batch-size', default=1, type=int,
+                        metavar='N',
+                        help='mini-batch size (default: 256), this is the total '
+                             'batch size of all GPUs on the current node when '
+                             'using Data Parallel or Distributed Data Parallel')
+
+
+
+
+
+    # parser.add_argument('-p', '--print-freq', default=10, type=int,
+    #                     metavar='N', help='print frequency (default: 10)')
+    parser.add_argument('--save_frequency', default=2, type=int, metavar='N',
+                            help='Frequency of saving in number of period')
+    parser.add_argument('--load_path', default='model/epoch50', type=str, metavar='PATH',
+                            help='Path to load model')
+
+
+    parser.add_argument('--gpu', default=None, type=int,
+                        help='GPU id to use.')
+
 
     args = parser.parse_args()
     return args

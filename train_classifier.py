@@ -15,12 +15,14 @@ from utils import *
 # -optimizer: code utils.get_optimizer
 # -multigpu
 # -scheduler lr: linear and others
+# -visdom (when at FB)
 
 # define options
 opt  = get_args()
 
 
 # defining device
+# TODO change device gestion
 if torch.cuda.is_available():
     print("GPU found: device set to cuda:0")
     device = torch.device("cuda:{}".format(opt.gpu))
