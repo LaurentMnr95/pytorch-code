@@ -41,8 +41,7 @@ Classifier.eval()
 running_acc = 0
 running_acc_adv = 0
 for i, data in enumerate(test_loader, 0):
-    if i>100:
-        break
+
 
     # get the inputs
     inputs, labels = data
