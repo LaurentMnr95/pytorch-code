@@ -2,7 +2,9 @@ import argparse
 
 
 def get_args():
-    parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
+    parser = argparse.ArgumentParser(description='PyTorch Training')
+    parser.add_argument('--datadir', default='/private/home/laurentmeunier/datasets', type=str,
+                        help='Dataset to train on')
     parser.add_argument('--dataset', default='CIFAR10', type=str,
                         help='Dataset to train on')
     parser.add_argument('--input_nc', default=3, type=int, metavar='N',
@@ -43,7 +45,9 @@ def get_args():
     #                     metavar='N', help='print frequency (default: 10)')
     parser.add_argument('--save_frequency', default=2, type=int, metavar='N',
                             help='Frequency of saving in number of period')
-    parser.add_argument('--save_path', default='model', type=str, metavar='PATH',
+    parser.add_argument('--save_path', default='/private/home/laurentmeunier/models', type=str, metavar='PATH',
+                            help='Path to save models')
+    parser.add_argument('--model_name', default='CIFAR10_resnet34', type=str, metavar='PATH',
                             help='Path to save models')
     parser.add_argument('--resume', default='', type=str, metavar='PATH',
                         help='path to latest checkpoint (default: none)')
