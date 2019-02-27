@@ -19,10 +19,16 @@ from utils import *
 
 # define options
 opt  = get_args()
-
+opt.val_test = True
+DEFAULT_PORT = 8097
+DEFAULT_HOSTNAME = "localhost"
+viz = Visdom(port=DEFAULT_PORT, server=DEFAULT_HOSTNAME)
 
 # defining device
-# TODO change device gestion
+# TODO 
+# change device gestion to multiple GPUs 
+# use visdom
+# Look at test accuracy at -
 if torch.cuda.is_available():
     print("GPU found: device set to cuda:0")
     device = torch.device("cuda:{}".format(opt.gpu))
@@ -34,6 +40,14 @@ else:
 
 # Load inputs
 train_loader = load_data(opt)
+if opt.val_test == True:
+    optn=opt
+    optn.batch_size = 10000
+    test_loader = load_data(opt,train_mode=False)
+    dataiter = iter(test_loader)
+    images_test, labels_test = dataiter.next()
+    images_test, labels_test = images_test.to(device), labels_test.to(device)
+
 num_images=len(train_loader.dataset)
 # Classifier  definition
 Classifier = resnet34(opt.input_nc)
@@ -44,7 +58,7 @@ Classifier.train()
 
 
 # optimizer and criterion
-criterion = torch.nn.CrossEntropyLoss().cuda(opt.gpu)
+criterion = torch.nn.CrossEntropyLoss(reduction='mean').cuda(opt.gpu)
 optimizer = torch.optim.SGD(Classifier.parameters(), lr=opt.lr, momentum=opt.momentum, weight_decay=opt.weight_decay)
 scheduler = get_scheduler(optimizer,opt)
 
@@ -65,13 +79,38 @@ if opt.resume:
 
 
 # initialize Visdom
-# viz = Visdom(port=opt.visdom_port, server=opt.visdom_hostname)
+X=[]
+Y_loss = [[],[]]
+Y_acc = [[],[]]
 
+data_loss=[None,None]
+data_acc=[None,None]
+
+win_loss= 'loss'
+win_acc='acc'
+
+layout_loss= {
+                'title':"Loss vs epoch",
+                'xaxis':{'title':'Epoch'},
+                'yaxis':{'title':'Loss'}
+}
+layout_acc= {
+                'title':"Accuracy vs Epoch",
+                'xaxis':{'title':'Epoch'},
+                'yaxis':{'title':'Acc'}
+}
+env='main'
+opts={}
  # loop over the dataset multiple times
+
 for epoch in range(opt.start_epoch,opt.epochs):
     current_num_input = 0
+
     running_loss = 0.0
     running_acc= 0
+
+    training_loss = 0
+    training_acc = 0
     for i, data in enumerate(train_loader, 0):
 
         # get the inputs
@@ -91,30 +130,59 @@ for epoch in range(opt.start_epoch,opt.epochs):
 
         # print statistics
         running_loss += loss.item()
-        current_num_input += len(labels)
+        current_num_input = len(labels)
+        training_loss += (loss.item()*current_num_input)
 
         with torch.no_grad():
             running_acc += (predicted==labels).double().sum().item()/len(labels)
+            training_acc += (predicted==labels).double().sum().item()
 
         if i % 20 == 19:
             # print every 20 mini-batches
             print("Epoch :[", epoch+1,"/",opt.epochs,
-                    "] [",current_num_input,"/",num_images,
+                    "] [",i*current_num_input,"/",num_images,
                     "] Running loss:",running_loss/20,
                     ", Running accuracy:",running_acc/20)
             running_loss = 0.0
             running_acc = 0
 
+
     # save model
     if (epoch +1) % opt.save_frequency == 0:
-        path_to_save = os.path.join(opt.save_path,"epoch"+str(epoch+1))
+        path_to_save = os.path.join(opt.save_path,opt.model_name)
 
-        if not os.path.exists(opt.save_path):
-            os.makedirs(opt.save_path)
+        if not os.path.exists(path_to_save):
+            os.makedirs(path_to_save)
         save_dict={'epoch': epoch + 1,
                 'state_dict': Classifier.state_dict(),
                 'optimizer' : optimizer.state_dict(),
                 'scheduler': scheduler.state_dict()}
-        torch.save(save_dict,path_to_save)
+        torch.save(save_dict,os.path.join(path_to_save,"epoch"+str(i+1)))
 
+
+    X.append(epoch)
+    Y_loss[0].append(training_loss/num_images)
+    Y_acc[0].append(training_acc/num_images)
+    data_loss[0] = {'x': X,'y':Y_loss[0],'name':'Train','type':'line'}
+    data_acc[0] = {'x': X,'y': Y_acc[0],'name':'Train','type': 'line'}
+
+    if opt.val_test == True:
+        outputs_test = Classifier(images_test)
+        loss_test = criterion(outputs_test, labels_test)
+
+        _, predicted = torch.max(outputs_test.data, 1)
+        test_acc = (predicted==labels_test).double().mean().item()
+        test_loss = loss_test.item()
+
+        Y_loss[1].append(test_loss)
+        Y_acc[1].append(test_acc)
+
+        data_loss[1] = {'x': X,'y':Y_loss[1],'name':'Test','type':'line'}
+        data_acc[1] = {'x': X,'y': Y_acc[1],'name':'Test','type': 'line'}
+
+        viz._send({'data': data_loss, 'win': win_loss, 'eid': env, 'layout': layout_loss,'opts':opts})
+        viz._send({'data': data_acc, 'win': win_acc, 'eid': env, 'layout': layout_acc,'opts':opts})
+    else:
+        viz._send({'data': [data_loss[0]], 'win': win_loss, 'eid': env, 'layout': layout_loss,'opts':opts})
+        viz._send({'data': [data_acc[0]], 'win': win_acc, 'eid': env, 'layout': layout_acc,'opts':opts})
     scheduler.step()
