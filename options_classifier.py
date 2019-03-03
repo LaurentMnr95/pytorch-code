@@ -1,88 +1,79 @@
 import argparse
 
+#TODO: visdom, gpus, valtest
+class options_train:
+    def __init__(self):
+        self.datadir ='/private/home/laurentmeunier/datasets'
+        self.dataset = 'CIFAR10' #only cifar 10 and mnist for now
+        self.input_nc = 3 #3 for cifar 1 for mnist, number of input channels
+        self.num_classes = 10
+        
+        self.net_type = 'wide-resnet'
 
-def get_args():
-    parser = argparse.ArgumentParser(description='PyTorch Training')
-    parser.add_argument('--datadir', default='/private/home/laurentmeunier/datasets', type=str,
-                        help='Dataset to train on')
-    parser.add_argument('--dataset', default='CIFAR10', type=str,
-                        help='Dataset to train on')
-    parser.add_argument('--input_nc', default=3, type=int, metavar='N',
-                        help='number of input channels')
-    # parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet18',
-    #                     choices=model_names,
-    #                     help='model architecture: ' +
-    #                         ' | '.join(model_names) +
-    #                         ' (default: resnet18)')
-    # parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
-    #                     help='number of data loading workers (default: 4)')
-    parser.add_argument('--epochs', default=90, type=int, metavar='N',
-                        help='number of total epochs to run')
-    parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
-                        help='manual epoch number (useful on restarts)')
-    parser.add_argument('-b', '--batch-size', default=256, type=int,
-                        metavar='N',
-                        help='mini-batch size (default: 256), this is the total '
-                             'batch size of all GPUs on the current node when '
-                             'using Data Parallel or Distributed Data Parallel')
-    # optimizer parameters for SGD
-    parser.add_argument('--lr', '--learning-rate', default=0.1, type=float,
-                        metavar='LR', help='initial learning rate', dest='lr')
-    parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
-                        help='momentum')
-    parser.add_argument('--wd', '--weight-decay', default=1e-4, type=float,
-                        metavar='W', help='weight decay (default: 1e-4)',
-                        dest='weight_decay')
-
-    #lr parameters
-    parser.add_argument('--lr_policy', default='step', type=str,
-                        metavar='L', help='lr_policy')
-    parser.add_argument('--stepsize_lr', default=30, type=int, metavar='N',
-                        help='step size for step decayed lr policy')
+        self.depth = 28
+        self.widen_factor = 20
+        self.dropout = 0.3
 
 
-    # parser.add_argument('-p', '--print-freq', default=10, type=int,
-    #                     metavar='N', help='print frequency (default: 10)')
-    parser.add_argument('--save_frequency', default=2, type=int, metavar='N',
-                            help='Frequency of saving in number of period')
-    parser.add_argument('--save_path', default='/private/home/laurentmeunier/models', type=str, metavar='PATH',
-                            help='Path to save models')
-    parser.add_argument('--model_name', default='CIFAR10_resnet34', type=str, metavar='PATH',
-                            help='Path to save models')
-    parser.add_argument('--resume', default='', type=str, metavar='PATH',
-                        help='path to latest checkpoint (default: none)')
-    # parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
-    #                     help='evaluate model on validation set')
-    # parser.add_argument('--pretrained', dest='pretrained', action='store_true',
-    #                     help='use pre-trained model')
-    # parser.add_argument('--world-size', default=-1, type=int,
-    #                     help='number of nodes for distributed training')
-    # parser.add_argument('--rank', default=-1, type=int,
-    #                     help='node rank for distributed training')
-    # parser.add_argument('--dist-url', default='tcp://224.66.41.62:23456', type=str,
-    #                     help='url used to set up distributed training')
-    # parser.add_argument('--dist-backend', default='nccl', type=str,
-    #                     help='distributed backend')
-    # parser.add_argument('--seed', default=None, type=int,
-    #                     help='seed for initializing training. ')
-    parser.add_argument('--gpu', default=None, type=int,
-                        help='GPU id to use.')
-    # parser.add_argument('--multiprocessing-distributed', action='store_true',
-    #                     help='Use multi-processing distributed training to launch '
-    #                          'N processes per node, which has N GPUs. This is the '
-    #                          'fastest way to use PyTorch for either single node or '
-    #                          'multi node data parallel training')
+        self.epochs = 200
+        self.start_epoch = 0
+        self.batch_size = 128
 
-    args = parser.parse_args()
-    return args
+
+
+        # selfimizer parameters for SGD
+        self.lr = 0.1
+        self.momentum = 0.9
+        self.weight_decay = 5e-4
+
+        #lr parameters TODO: config other steps
+        self.lr_policy = 'multistep'
+
+        if self.lr_policy == 'step':
+            self.stepsize_lr = 100 
+            self.step_gamma = 0.1
+
+        if self.lr_policy == 'multistep':
+            self.milestones = [60,120,160]
+            self.step_gamma = 0.2
+
+        # save frequency
+        self.save_frequency = 10
+        self.save_path ='/private/home/laurentmeunier/models'
+        self.resume = False
+        self.resume_name = "BEST.t7"
+
+        # self.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
+        #                     help='evaluate model on validation set')
+        # self.add_argument('--pretrained', dest='pretrained', action='store_true',
+        #                     help='use pre-trained model')
+        # self.add_argument('--world-size', default=-1, type=int,
+        #                     help='number of nodes for distributed training')
+        # self.add_argument('--rank', default=-1, type=int,
+        #                     help='node rank for distributed training')
+        # self.add_argument('--dist-url', default='tcp://224.66.41.62:23456', type=str,
+        #                     help='url used to set up distributed training')
+        # self.add_argument('--dist-backend', default='nccl', type=str,
+        #                     help='distributed backend')
+        # self.add_argument('--seed', default=None, type=int,
+        #                     help='seed for initializing training. ')
+        self.gpu = True
+        # self.add_argument('--multiprocessing-distributed', action='store_true',
+        #                     help='Use multi-processing distributed training to launch '
+        #                          'N processes per node, which has N GPUs. This is the '
+        #                          'fastest way to use PyTorch for either single node or '
+        #                          'multi node data parallel training')
+
+        # args = self.parse_args()
+        # return args
 
 def get_args_test():
-    parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
-    parser.add_argument('--dataset', default='CIFAR10', type=str,
+    self = argparse.Argumentself(description='PyTorch ImageNet Training')
+    self.add_argument('--dataset', default='CIFAR10', type=str,
                         help='Dataset to train on')
-    parser.add_argument('--input_nc', default=3, type=int, metavar='N',
+    self.add_argument('--input_nc', default=3, type=int, metavar='N',
                         help='number of input channels')
-    parser.add_argument('-b', '--batch-size', default=1, type=int,
+    self.add_argument('-b', '--batch-size', default=1, type=int,
                         metavar='N',
                         help='mini-batch size (default: 256), this is the total '
                              'batch size of all GPUs on the current node when '
@@ -92,17 +83,17 @@ def get_args_test():
 
 
 
-    # parser.add_argument('-p', '--print-freq', default=10, type=int,
+    # self.add_argument('-p', '--print-freq', default=10, type=int,
     #                     metavar='N', help='print frequency (default: 10)')
-    parser.add_argument('--save_frequency', default=2, type=int, metavar='N',
+    self.add_argument('--save_frequency', default=2, type=int, metavar='N',
                             help='Frequency of saving in number of period')
-    parser.add_argument('--load_path', default='model/epoch50', type=str, metavar='PATH',
+    self.add_argument('--load_path', default='model/epoch50', type=str, metavar='PATH',
                             help='Path to load model')
 
 
-    parser.add_argument('--gpu', default=None, type=int,
+    self.add_argument('--gpu', default=None, type=int,
                         help='GPU id to use.')
 
 
-    args = parser.parse_args()
+    args = self.parse_args()
     return args
