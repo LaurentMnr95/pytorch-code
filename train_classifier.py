@@ -23,7 +23,7 @@ import copy
 # add option on parallel, add option on testshows
 
 # define options
-opt  = options_train()
+opt = options_train()
 
 opt.val_test = True
 DEFAULT_PORT = 8097
@@ -49,10 +49,6 @@ if opt.val_test == True:
 
 num_images = len(train_loader.dataset)
 num_images_test = len(test_loader.dataset)
-num_classes = opt.num_classes
-
-
-
 
 
 # Classifier  definition
@@ -80,7 +76,7 @@ if opt.resume == True:
         print("=> loading checkpoint '{}'".format(path_to_load))
         checkpoint = torch.load(path_to_load)
         opt.start_epoch = checkpoint['epoch']
-        Classifier.load(checkpoint['state_dict'])
+        Classifier = checkpoint['net']
 
         print("=> loaded checkpoint '{}' (epoch {})"
               .format(opt.resume, checkpoint['epoch']))
