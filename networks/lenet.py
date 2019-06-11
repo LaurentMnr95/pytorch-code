@@ -4,8 +4,8 @@ import torch.nn.functional as F
 def conv_init(m):
     classname = m.__class__.__name__
     if classname.find('Conv') != -1:
-        init.xavier_uniform(m.weight, gain=np.sqrt(2))
-        init.constant(m.bias, 0)
+        init.xavier_uniform_(m.weight, gain=np.sqrt(2))
+        init.constant_(m.bias, 0)
 
 class LeNet(nn.Module):
     def __init__(self, num_classes):

@@ -1,9 +1,10 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 from torch.autograd import Variable
 import sys
+
+
 
 def conv3x3(in_planes, out_planes, stride=1):
     return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride, padding=1, bias=True)
@@ -11,8 +12,8 @@ def conv3x3(in_planes, out_planes, stride=1):
 def conv_init(m):
     classname = m.__class__.__name__
     if classname.find('Conv') != -1:
-        init.xavier_uniform(m.weight, gain=np.sqrt(2))
-        init.constant(m.bias, 0)
+        init.xavier_uniform_(m.weight, gain=np.sqrt(2))
+        init.constant_(m.bias, 0)
 
 def cfg(depth):
     depth_lst = [18, 34, 50, 101, 152]
@@ -81,7 +82,7 @@ class Bottleneck(nn.Module):
         return out
 
 class ResNet(nn.Module):
-    def __init__(self, depth, num_classes):
+    def __init__(self, depth, num_classes,s):
         super(ResNet, self).__init__()
         self.in_planes = 16
 
@@ -111,6 +112,7 @@ class ResNet(nn.Module):
         out = self.layer3(out)
         out = F.avg_pool2d(out, 8)
         out = out.view(out.size(0), -1)
+
         out = self.linear(out)
 
         return out
